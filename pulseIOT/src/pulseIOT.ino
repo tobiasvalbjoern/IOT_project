@@ -14,7 +14,7 @@ rawSignal : int that holds the analog signal data straight from the sensor. upda
 IBI  :      int that holds the time interval between beats. 2mS resolution.
 BPM  :      int that holds the heart rate value, derived every beat, from averaging previous 10 IBI values.
 QS  :       boolean that is made true whenever Pulse is found and BPM is updated. User must reset.
-Pulse :     boolean that is true when a heartbeat is sensed then false in time with pin13 LED going out.
+Pulse :     boolean that is true when a heartbeat is sensed then false in time with LED going out.
 
 This code is designed with output serial data to Processing sketch "PulseSensorAmped_Processing-xx"
 The Processing sketch is a simple data visualizer.
@@ -39,6 +39,7 @@ In order for this app to compile correctly, the following Partible Build (Web ID
 #include <SparkIntervalTimer.h>
 
 extern void interruptSetup(void);
+
 extern int pulsePin;
 //Set to onboard LED D7
 extern int blinkPin;
@@ -51,9 +52,11 @@ extern volatile boolean QS;
 //Pin that can be used to do fading with LED.
 //It is set to D6
 extern int fadePin;
+//int test=3;
 extern int fadeRate;
 
 void setup(){
+	fadePin=D3;
 	pinMode(blinkPin,OUTPUT);         // pin that will blink to your heartbeat!
 	pinMode(fadePin,OUTPUT);          // pin that will fade to your heartbeat!
 	Serial.begin(115200);             // we agree to talk fast!
@@ -62,7 +65,6 @@ void setup(){
 
 //  Where the Magic Happens
 void loop(){
-
 	if (QS == true){     //  A Heartbeat Was Found
 		// BPM and IBI have been Determined
 		// Quantified Self "QS" true when arduino finds a heartbeat
@@ -75,12 +77,9 @@ void loop(){
 	else {
 		digitalWrite(blinkPin,LOW);            // There is not beat, turn off onboard LED
 	}
-
 	ledFadeToBeat();                      // Makes the LED Fade Effect Happen
 	delay(20);                             //  take a break
 }
-
-
 
 //  Decides How To OutPut BPM and IBI Data
 void serialOutputWhenBeatHappens(){
@@ -90,8 +89,6 @@ void serialOutputWhenBeatHappens(){
 		Serial.print(BPM);
 		Serial.println("  ");
 }
-
-
 
 void ledFadeToBeat(){
 	fadeRate -= 15;                         //  set LED fade value
