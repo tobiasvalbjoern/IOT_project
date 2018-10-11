@@ -37,7 +37,6 @@ In order for this app to compile correctly, the following Partible Build (Web ID
 
 */
 #include <SparkIntervalTimer.h>
-#include <SimpleTimer.h>
 
 extern void interruptSetup(void);
 //Set to onboard LED D7
@@ -136,8 +135,13 @@ void loop(){
 	{
 		sendToCloud();
 		Serial.println("Data send to cloud");
+
+		//Indicate to the user, that the test is over.
+		timerDone=millis()+10000;
+		while(millis()<=timerDone){digitalWrite(fadePin, HIGH);}
 		//Calculate the next time that data needs to be sent to cloud
 		timerDone=millis()+10000;
+
 	}
 	delay(20);
 }
