@@ -3,9 +3,6 @@
 The code is based on code from the following repository:
 https://github.com/pkourany/PulseSensor_Spark.git
 
-I am also using a standard library PulseSensor_Spark v. 1.5.4.
-PulseSensor_Spark.cpp and PulseSensor_Spark.h is found at the same repository
-
 Pulse Sensor sample aquisition and processing happens in the background via a
 hardware Timer interrupt at 2mS sample rate.
 On the Photon, TIMR3 is allocated and has no affect on the A2 pin.
@@ -203,10 +200,12 @@ void myHandler(const char *event, const char *data) {
 	Serial.println(data);
 	*/
 	//Indicate to the user, that the test is over.
+	accBeats=0;
+	numBeat=0;
 	timerDone=millis()+10000;
 	while(millis()<=timerDone){digitalWrite(fadePin, HIGH);}
 	//Calculate the next time that data needs to be sent to cloud
 	timerDone=millis()+10000;
-	waitingResponse=false;
  }
+ waitingResponse=false;
 }
