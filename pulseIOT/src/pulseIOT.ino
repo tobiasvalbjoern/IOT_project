@@ -37,24 +37,19 @@ Version: 1.9
 */
 
 #include <SparkIntervalTimer.h>
-
 extern void interruptSetup(void);
 //Set to onboard LED D7
 extern int blinkPin;
 extern int pulsePin;
-
 extern volatile int BPM;;
 extern volatile int rawSignal;;
 extern volatile int IBI;
-
 extern volatile boolean Pulse;
 extern volatile boolean QS;
-
 //Pin that can be used to do fading with LED.
 //It is set to D6
 extern int fadePin;
 extern int fadeRate;
-
 int lastBPM=0;
 int consecBeat=0;
 int threshold=10;
@@ -66,13 +61,10 @@ boolean waitingResponse=false;
 void setup(){
 	//Default fade pin is D6, but D0-D3 is PWM on particle photon.
 	fadePin=D3;
-
 	// pin that will blink to your heartbeat!
 	pinMode(blinkPin,OUTPUT);
-
 	// pin that will fade to your heartbeat
 	pinMode(fadePin,OUTPUT);
-
 	Serial.begin(115200);
 
 	// sets up to read Pulse Sensor signal every 2mS.
@@ -83,12 +75,10 @@ void setup(){
 	//from the web server and use it in the firmware logic.
 	Particle.subscribe("hook-response/bpm", myHandler, MY_DEVICES);
 }
-
 void loop(){
 	// BPM and IBI have been Determined
 	// Quantified Self "QS" true when arduino finds a heartbeat
 	if (QS == true){
-
 		//I want to avoid measuring big shifts in the heartbeats.
 		//I want to measure the heartbeat when the resting heart rate has settled.
 		if(abs(BPM-lastBPM) < 5)
@@ -99,19 +89,13 @@ void loop(){
 			//has reached the threshold, there is a high chance that the pulse happens
 			//been found and is steady, ready to meassure.
 			if(consecBeat==threshold){
-				//Serial.println("Success! consecBeat is:");
-				//Serial.println(consecBeat);
 				avgBPM=BPM;
 				timerDone=millis()+20000;
-				//Serial.println("Timer set");
 			}
 			//we will only do the measurements when we are above the threshold
 			//for consequtive heartbeats, this will increase accuracy of data.
 			if(consecBeat>threshold){
-				numBeat++;
-				//accumulated beats for averaging
-				accBeats+=BPM;
-				avgBPM=accBeats/numBeat;
+				calcAvgBPM();
 			}
 		}
 		else{
@@ -127,13 +111,13 @@ void loop(){
 		fadeRate = 255;
 
 		//Output beat to serial.
-		//serialOutputWhenBeatHappens();
+		serialOutputWhenBeatHappens();
 
 		// reset the Quantified Self flag for next time
 		QS = false;
 	}
 	else {
-		// There is not beat
+		// There is not a beat
 		digitalWrite(blinkPin,LOW);
 	}
 
@@ -142,12 +126,18 @@ void loop(){
 
 	if(millis()>=timerDone && consecBeat>=threshold && waitingResponse==false)
 	{
-		//We don't want this function to be called, before there is a
+		//We don't want this function to be called, before there is a response
 		waitingResponse=true;
 		sendToCloud();
-		//Serial.println("Data send to cloud");
 	}
 	delay(20);
+}
+
+void calcAvgBPM(){
+	numBeat++;
+	//accumulated beats for averaging
+	accBeats+=BPM;
+	avgBPM=accBeats/numBeat;
 }
 
 //  Decides How To OutPut BPM and IBI Data
@@ -167,8 +157,6 @@ void ledFadeToBeat(){
 }
 
 void sendToCloud() {
-	//Serial.println("Sending number of beats to cloud:");
-	//Serial.println(avgBPM);
 	String data=String(avgBPM);
 	bool success=false;
 	while(!success){
@@ -176,29 +164,11 @@ void sendToCloud() {
 		}
 }
 
-
 void myHandler(const char *event, const char *data) {
-/*
-	Serial.println("Im in!");
-	Serial.print("event: ");
-	Serial.println(event);
-	Serial.print("Time: ");
-	Serial.println(millis());
-	Serial.print("Data: ");
-	Serial.println(data);
-*/
 //event and data are C-strings. when comparing with "hook-response/bpm/0",
 //a string object will be created. event=="hook-response/bpm/0" would
 //never be true. Therefore strcmp has to be used.
  if(strcmp(event,"hook-response/bpm/0")==0 && strcmp(data,"0")){
-	/*Serial.println("inside if statement");
-	Serial.print("event: ");
-	Serial.println(event);
-	Serial.print("Time: ");
-	Serial.println(millis());
-	Serial.print("Data: ");
-	Serial.println(data);
-	*/
 	//Indicate to the user, that the test is over.
 	accBeats=0;
 	numBeat=0;
